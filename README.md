@@ -13,26 +13,26 @@ En equipos de ingeniería con múltiples microservicios y documentación dispers
 
 **Hybrid RAG & MCP Engine** resuelve ambos problemas combinando lo mejor de los dos mundos:
 
-| Pilar de Valor | Qué significa en la práctica |
-| :--- | :--- |
+| Pilar de Valor                                   | Qué significa en la práctica                                                                                                                                                                                                                                    |
+| :----------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 🔒 **Privacidad Total (Zero External LLM SDKs)** | El backend **no instala ni importa** SDKs de modelos externos (`openai`, `anthropic`, `google/genai`, `langchain`). La comprensión semántica se calcula localmente en CPU mediante **ONNX** (`Xenova/bge-base-en-v1.5`), sin fuga de datos ni costes por token. |
-| 🔀 **Búsqueda Híbrida Real (BM25 + kNN + RRF)** | Fusiona coincidencia exacta de símbolos/archivos (**BM25**) con similitud conceptual vectorial (**HNSW 768d**) mediante **Reciprocal Rank Fusion**, devolviendo el fragmento exacto con archivo y líneas (`startLine`–`endLine`). |
-| 🧩 **Fragmentación Inteligente por AST** | En lugar de cortar archivos cada N caracteres, analiza el árbol sintáctico (**AST**) con `web-tree-sitter` en WebAssembly para extraer funciones, clases, interfaces y secciones Markdown/PDF completas. |
-| 🖥️ **Doble Interfaz (Web + MCP)** | Incluye una consola visual moderna (**React 19 + Vite + Tailwind CSS v4**) para uso directo en navegador y un endpoint **MCP Streamable HTTP** (`/mcp`) para integrarse nativamente con IDEs compatibles. |
-| 🚀 **Preparado para Producción** | Separación **CQRS**, ingesta asíncrona resiliente con **Apache Kafka (KRaft) + DLQ**, caché selectiva en **Redis**, contenedores `node:22-slim` sin `root`, manifiestos **Kubernetes (Kustomize)** y pipeline CI/CD completo. |
+| 🔀 **Búsqueda Híbrida Real (BM25 + kNN + RRF)**  | Fusiona coincidencia exacta de símbolos/archivos (**BM25**) con similitud conceptual vectorial (**HNSW 768d**) mediante **Reciprocal Rank Fusion**, devolviendo el fragmento exacto con archivo y líneas (`startLine`–`endLine`).                               |
+| 🧩 **Fragmentación Inteligente por AST**         | En lugar de cortar archivos cada N caracteres, analiza el árbol sintáctico (**AST**) con `web-tree-sitter` en WebAssembly para extraer funciones, clases, interfaces y secciones Markdown/PDF completas.                                                        |
+| 🖥️ **Doble Interfaz (Web + MCP)**                | Incluye una consola visual moderna (**React 19 + Vite + Tailwind CSS v4**) para uso directo en navegador y un endpoint **MCP Streamable HTTP** (`/mcp`) para integrarse nativamente con IDEs compatibles.                                                       |
+| 🚀 **Preparado para Producción**                 | Separación **CQRS**, ingesta asíncrona resiliente con **Apache Kafka (KRaft) + DLQ**, caché selectiva en **Redis**, contenedores `node:22-slim` sin `root`, manifiestos **Kubernetes (Kustomize)** y pipeline CI/CD completo.                                   |
 
 ---
 
 ## 🛠️ Mapa de Competencias Técnicas Demostradas
 
-| Área | Tecnologías y Patrones Aplicados |
-| :--- | :--- |
-| ⚙️ **Arquitectura & Backend** | Node.js 22 LTS, TypeScript 5 (`strict`), Monorepo (`pnpm` workspaces + Turborepo), Fastify v5, validación de contratos con Zod v4, OpenAPI / Swagger, CQRS, Event-Driven Architecture |
+| Área                               | Tecnologías y Patrones Aplicados                                                                                                                                                                                                            |
+| :--------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ⚙️ **Arquitectura & Backend**      | Node.js 22 LTS, TypeScript 5 (`strict`), Monorepo (`pnpm` workspaces + Turborepo), Fastify v5, validación de contratos con Zod v4, OpenAPI / Swagger, CQRS, Event-Driven Architecture                                                       |
 | 🤖 **IA Aplicada & Search Engine** | Embeddings locales ONNX (`@huggingface/transformers`), Elasticsearch 8.15+ (analizador personalizado `camelCase`/`snake_case`, índice vectorial HNSW `768d` cosine), BM25 + kNN + RRF, Model Context Protocol (`@modelcontextprotocol/sdk`) |
-| 🌳 **Parsing & Ingesta** | AST Code Chunking (`web-tree-sitter` WASM para TypeScript, JavaScript, Python y Go), parser semántico Markdown y extracción PDF (`pdf-parse`), idempotencia determinista vía SHA-256 |
-| 💾 **Datos, Mensajería & Caché** | PostgreSQL 17 + Drizzle ORM, Apache Kafka 3.8 en modo KRaft (sin Zookeeper, reintentos con _exponential backoff_ y Dead Letter Queue), Redis 7 (`Cache-Aside` con invalidación por repositorio) |
-| 🎨 **Frontend** | React 19, Vite, TypeScript, Tailwind CSS v4, Lucide Icons, cliente REST tipado, proxy de desarrollo, tests de interfaz con `@testing-library/react` + `jsdom` |
-| 🐳 **DevOps, Seguridad & QA** | Docker multi-stage con `turbo prune`, usuario no privilegiado `node`, Kubernetes + Kustomize (Deployments, StatefulSets, HPA, Probes `/healthz` y `/readyz`), Vitest + Testcontainers, GitHub Actions (Trivy + Kind + GHCR), Biome |
+| 🌳 **Parsing & Ingesta**           | AST Code Chunking (`web-tree-sitter` WASM para TypeScript, JavaScript, Python y Go), parser semántico Markdown y extracción PDF (`pdf-parse`), idempotencia determinista vía SHA-256                                                        |
+| 💾 **Datos, Mensajería & Caché**   | PostgreSQL 17 + Drizzle ORM, Apache Kafka 3.8 en modo KRaft (sin Zookeeper, reintentos con _exponential backoff_ y Dead Letter Queue), Redis 7 (`Cache-Aside` con invalidación por repositorio)                                             |
+| 🎨 **Frontend**                    | React 19, Vite, TypeScript, Tailwind CSS v4, Lucide Icons, cliente REST tipado, proxy de desarrollo, tests de interfaz con `@testing-library/react` + `jsdom`                                                                               |
+| 🐳 **DevOps, Seguridad & QA**      | Docker multi-stage con `turbo prune`, usuario no privilegiado `node`, Kubernetes + Kustomize (Deployments, StatefulSets, HPA, Probes `/healthz` y `/readyz`), Vitest + Testcontainers, GitHub Actions (Trivy + Kind + GHCR), Biome          |
 
 ---
 
@@ -182,14 +182,14 @@ Una vez iniciados:
 
 ### 🌐 Endpoints REST (`apps/api`)
 
-| Método | Ruta | Descripción |
-| :--- | :--- | :--- |
-| `POST` | `/api/v1/repositories` | Registra o re-indexa un repositorio en PostgreSQL y publica evento en Kafka (`202 Accepted`) |
-| `GET` | `/api/v1/repositories` | Lista repositorios y el último `ingestion_job` asociado |
-| `DELETE` | `/api/v1/repositories/:id` | Elimina chunks en Elasticsearch, invalida caché Redis y borra el registro en PostgreSQL |
-| `POST` | `/api/v1/search` | Ejecuta búsqueda híbrida (`BM25 + kNN / RRF`) con caché en Redis |
-| `GET` | `/api/v1/symbols` | Busca definiciones exactas por `symbolName` |
-| `GET` | `/healthz` / `/readyz` | Sondeo de liveness y readiness contra PG, Redis, Elasticsearch y Kafka |
+| Método   | Ruta                       | Descripción                                                                                  |
+| :------- | :------------------------- | :------------------------------------------------------------------------------------------- |
+| `POST`   | `/api/v1/repositories`     | Registra o re-indexa un repositorio en PostgreSQL y publica evento en Kafka (`202 Accepted`) |
+| `GET`    | `/api/v1/repositories`     | Lista repositorios y el último `ingestion_job` asociado                                      |
+| `DELETE` | `/api/v1/repositories/:id` | Elimina chunks en Elasticsearch, invalida caché Redis y borra el registro en PostgreSQL      |
+| `POST`   | `/api/v1/search`           | Ejecuta búsqueda híbrida (`BM25 + kNN / RRF`) con caché en Redis                             |
+| `GET`    | `/api/v1/symbols`          | Busca definiciones exactas por `symbolName`                                                  |
+| `GET`    | `/healthz` / `/readyz`     | Sondeo de liveness y readiness contra PG, Redis, Elasticsearch y Kafka                       |
 
 ### 🧩 Herramientas MCP (`/mcp`)
 
