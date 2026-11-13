@@ -75,6 +75,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [integration-tests, docker-build-and-scan]
     steps:
+      - name: Free runner disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
       - name: Build API image for Kind
@@ -93,6 +96,8 @@ jobs:
           load: true
           tags: ghcr.io/org/hybrid-rag-worker:latest
           cache-from: type=gha
+      - name: Prune Docker builder cache before Kind load
+        run: docker builder prune -af
       - uses: helm/kind-action@v1.15.2
         with:
           cluster_name: hybrid-rag-ci
