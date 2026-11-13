@@ -1,0 +1,37 @@
+# syntax=docker/dockerfile:1.7
+
+FROM node:22-slim AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+
+FROM base AS pruner
+WORKDIR /app
+COPY . .
+RUN npx turbo prune @rag/worker --docker
+
+FROM base AS installer
+WORKDIR /app
+COPY --from=pruner /app/out/json/ .
+COPY --from=pruner /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=pruner /app/out/pnpm-workspace.yaml ./pnpm-workspace.yaml
+RUN pnpm install --frozen-lockfile --ignore-scripts
+
+COPY --from=pruner /app/out/full/ .
+RUN pnpm turbo run build --filter=@rag/worker...
+
+FROM node:22-slim AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+ENV HF_HOME=/home/node/.cache/huggingface
+
+RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN mkdir -p /home/node/.cache/huggingface && chown -R node:node /home/node /app
+
+COPY --from=installer --chown=node:node /app .
+
+# Pre-warm local ONNX embedding model for instant cold starts (gracefully ignored if offline build)
+USER node
+RUN node -e "import('@huggingface/transformers').then(({ pipeline }) => pipeline('feature-extraction', 'Xenova/bge-base-en-v1.5', { dtype: 'q8' })).catch(() => process.exit(0))"
+
+CMD ["node", "apps/worker/dist/index.js"]

@@ -1,0 +1,107 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  lint-typecheck-unit:
+    name: Lint, Typecheck & Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.18.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo build typecheck lint
+      - run: pnpm test:unit
+
+  integration-tests:
+    name: E2E Integration Tests (Testcontainers)
+    runs-on: ubuntu-latest
+    needs: lint-typecheck-unit
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.18.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo build
+      - run: pnpm test:integration
+
+  docker-build-and-scan:
+    name: Docker Build & Trivy Security Scan
+    runs-on: ubuntu-latest
+    needs: lint-typecheck-unit
+    strategy:
+      matrix:
+        include:
+          - service: api
+            dockerfile: Dockerfile.api
+          - service: worker
+            dockerfile: Dockerfile.worker
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          load: true
+          tags: hybrid-rag-${{ matrix.service }}:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: hybrid-rag-${{ matrix.service }}:ci
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+
+  kind-smoke-test:
+    name: Kind Kubernetes Smoke Test
+    runs-on: ubuntu-latest
+    needs: [integration-tests, docker-build-and-scan]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build local images for Kind
+        run: |
+          docker build -f Dockerfile.api -t ghcr.io/org/hybrid-rag-api:latest .
+          docker build -f Dockerfile.worker -t ghcr.io/org/hybrid-rag-worker:latest .
+      - uses: helm/kind-action@v1.10.0
+        with:
+          cluster_name: hybrid-rag-ci
+      - name: Load images into Kind cluster
+        run: |
+          kind load docker-image ghcr.io/org/hybrid-rag-api:latest --name hybrid-rag-ci
+          kind load docker-image ghcr.io/org/hybrid-rag-worker:latest --name hybrid-rag-ci
+      - name: Deploy Kustomize dev overlay
+        run: |
+          kubectl apply -k k8s/overlays/dev
+          kubectl -n hybrid-rag rollout status deployment/hybrid-rag-api --timeout=180s
+      - name: Smoke test /healthz
+        run: |
+          kubectl -n hybrid-rag port-forward svc/hybrid-rag-api 13000:80 &
+          PF_PID=$!
+          trap "kill $PF_PID || true" EXIT
+          for i in $(seq 1 15); do
+            if curl -sf http://localhost:13000/healthz | grep -q '"ok"'; then
+              echo "Smoke test passed!"
+              exit 0
+            fi
+            sleep 2
+          done
+          exit 1

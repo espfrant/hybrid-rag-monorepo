@@ -1,0 +1,168 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 680" width="1100" height="680">
+  <title>Hybrid RAG and MCP Engine System Architecture</title>
+  <defs>
+    <style>
+      .title { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 20px; font-weight: 700; fill: #f8fafc; }
+      .subtitle { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; fill: #94a3b8; }
+      .box-title { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 700; fill: #f1f5f9; }
+      .box-sub { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; fill: #cbd5e1; }
+      .card-label { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 600; }
+      .mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 9.5px; fill: #94a3b8; }
+      .pill-text { font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 10px; font-weight: 600; text-anchor: middle; dominant-baseline: central; }
+      .legend-text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 11.5px; fill: #cbd5e1; }
+    </style>
+    <marker id="arrow-cyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8"/>
+    </marker>
+    <marker id="arrow-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#fbbf24"/>
+    </marker>
+    <marker id="arrow-purple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#a78bfa"/>
+    </marker>
+  </defs>
+
+  <rect width="1100" height="680" rx="16" fill="#0f172a"/>
+
+  <!-- Header -->
+  <text x="550" y="34" text-anchor="middle" class="title">Hybrid RAG &amp; MCP Engine — Arquitectura del Sistema (CQRS + Event-Driven)</text>
+  <text x="550" y="54" text-anchor="middle" class="subtitle">Ingesta asíncrona AST + Embeddings locales ONNX (768d) + Búsqueda Híbrida BM25 &amp; kNN (RRF) + Web UI &amp; MCP</text>
+
+  <!-- TIER 1: CLIENTS (y: 74..168, h=94) -->
+  <rect x="40" y="74" width="470" height="94" rx="12" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+  <rect x="56" y="86" width="112" height="18" rx="4" fill="#0c4a6e"/>
+  <text x="112" y="95" class="pill-text" fill="#7dd3fc">CONSOLA HUMANA</text>
+  <text x="180" y="100" class="box-title">apps/web — React 19 + Vite (:5173)</text>
+  <text x="56" y="125" class="box-sub">Interfaz interactiva para búsqueda híbrida, símbolos y repositorios</text>
+  <text x="56" y="147" class="mono">Proxy Vite (/api, /readyz) · Tailwind CSS v4 · Estado en tiempo real</text>
+
+  <rect x="590" y="74" width="470" height="94" rx="12" fill="#1e293b" stroke="#a78bfa" stroke-width="1.5"/>
+  <rect x="606" y="86" width="108" height="18" rx="4" fill="#4c1d95"/>
+  <text x="660" y="95" class="pill-text" fill="#ddd6fe">ASISTENTES IA</text>
+  <text x="726" y="100" class="box-title">Clientes MCP &amp; IDEs Compatibles</text>
+  <text x="606" y="125" class="box-sub">Consumen el repositorio como contexto sin exponer código a terceros</text>
+  <text x="606" y="147" class="mono">JSON-RPC / Streamable HTTP · Toda inferencia ocurre en el cliente</text>
+
+  <!-- CORRIDOR 1 ARROWS (y: 168 -> 240, h=72) -->
+  <path d="M 255 168 L 255 240" stroke="#38bdf8" stroke-width="2" fill="none" marker-end="url(#arrow-cyan)"/>
+  <rect x="145" y="193" width="220" height="22" rx="5" fill="#0f172a" stroke="#38bdf8" stroke-width="1"/>
+  <text x="255" y="204" class="pill-text" fill="#7dd3fc">REST /api/v1/* &amp; /readyz</text>
+
+  <path d="M 825 168 L 825 198 L 430 198 L 430 240" stroke="#a78bfa" stroke-width="2" fill="none" marker-end="url(#arrow-purple)"/>
+  <rect x="530" y="187" width="224" height="22" rx="5" fill="#0f172a" stroke="#a78bfa" stroke-width="1"/>
+  <text x="642" y="198" class="pill-text" fill="#ddd6fe">MCP Streamable HTTP (/mcp)</text>
+
+  <!-- TIER 2: BACKEND SERVICES (y: 240..436, h=196) -->
+  <!-- apps/api -->
+  <rect x="40" y="240" width="470" height="196" rx="12" fill="#172554" fill-opacity="0.55" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="58" y="264" class="box-title">apps/api — Fastify v5 + MCP Server (:3000)</text>
+
+  <rect x="56" y="278" width="438" height="44" rx="7" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+  <text x="70" y="295" class="card-label" fill="#93c5fd">REST API &amp; OpenAPI (/api/v1/*, /docs)</text>
+  <text x="70" y="313" class="mono">POST/GET/DELETE /repositories · POST /search · GET /symbols</text>
+
+  <rect x="56" y="328" width="438" height="44" rx="7" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+  <text x="68" y="345" class="card-label" fill="#c4b5fd">Herramientas MCP Streamable HTTP (/mcp)</text>
+  <text x="68" y="363" class="mono">search_technical_docs · get_symbol_definition · list_indexed_repositories</text>
+
+  <rect x="56" y="378" width="438" height="44" rx="7" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+  <text x="68" y="395" class="card-label" fill="#67e8f9">Motor de Consulta Local + Probes Kubernetes</text>
+  <text x="68" y="413" class="mono">ONNX Query Vector (768d) · /healthz (liveness) · /readyz (readiness)</text>
+
+  <!-- apps/worker -->
+  <rect x="590" y="240" width="470" height="196" rx="12" fill="#451a03" fill-opacity="0.45" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="608" y="264" class="box-title">apps/worker — Worker de Ingesta Asíncrona</text>
+
+  <rect x="606" y="278" width="438" height="44" rx="7" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+  <text x="620" y="295" class="card-label" fill="#fcd34d">1. Consumidor Kafka Idempotente</text>
+  <text x="620" y="313" class="mono">Grupo rag-ingestion-workers · 3 reintentos backoff -&gt; DLQ</text>
+
+  <rect x="606" y="328" width="438" height="44" rx="7" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+  <text x="620" y="345" class="card-label" fill="#fcd34d">2. Clonado &amp; AST Code Chunker (WASM)</text>
+  <text x="620" y="363" class="mono">web-tree-sitter (TS/JS, Python, Go) + MD/PDF · startLine / endLine</text>
+
+  <rect x="606" y="378" width="438" height="44" rx="7" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+  <text x="620" y="395" class="card-label" fill="#fcd34d">3. Embeddings Locales CPU en Batches</text>
+  <text x="620" y="413" class="mono">@huggingface/transformers · Xenova/bge-base-en-v1.5 (768d L2)</text>
+
+  <!-- CORRIDOR 2 ARROWS (y: 436 -> 546, h=110) -->
+  <!-- Bus lanes cleanly ordered top-to-bottom:
+       y=450: Worker -> PostgreSQL
+       y=464: API -> Redis
+       y=478: API -> Elasticsearch
+       y=492: Kafka -> Worker
+       y=518: All bottom labels aligned cleanly above Tier 3 -->
+
+  <!-- 1. API -> PostgreSQL (x=96) -->
+  <path d="M 96 436 L 96 544" stroke="#38bdf8" stroke-width="2" fill="none" marker-end="url(#arrow-cyan)"/>
+  <rect x="42" y="508" width="110" height="20" rx="5" fill="#0f172a" stroke="#38bdf8" stroke-width="1"/>
+  <text x="97" y="518" class="pill-text" fill="#7dd3fc">CRUD Repos/Jobs</text>
+
+  <!-- 2. Worker -> PostgreSQL (y=450 lane -> drops at x=222) -->
+  <path d="M 622 436 L 622 450 L 222 450 L 222 544" stroke="#fbbf24" stroke-width="2" stroke-dasharray="5 3" fill="none" marker-end="url(#arrow-amber)"/>
+  <rect x="176" y="508" width="92" height="20" rx="5" fill="#0f172a" stroke="#fbbf24" stroke-width="1"/>
+  <text x="222" y="518" class="pill-text" fill="#fde68a">Estado READY</text>
+
+  <!-- 3. API -> Kafka (x=358) -->
+  <path d="M 358 436 L 358 544" stroke="#38bdf8" stroke-width="2" fill="none" marker-end="url(#arrow-cyan)"/>
+  <rect x="304" y="508" width="108" height="20" rx="5" fill="#0f172a" stroke="#38bdf8" stroke-width="1"/>
+  <text x="358" y="518" class="pill-text" fill="#7dd3fc">Publica Evento</text>
+
+  <!-- 4. API -> Redis (y=464 lane -> drops at x=884) -->
+  <path d="M 488 436 L 488 464 L 884 464 L 884 544" stroke="#38bdf8" stroke-width="2" fill="none" marker-end="url(#arrow-cyan)"/>
+  <rect x="836" y="508" width="96" height="20" rx="5" fill="#0f172a" stroke="#38bdf8" stroke-width="1"/>
+  <text x="884" y="518" class="pill-text" fill="#7dd3fc">Cache-Aside</text>
+
+  <!-- 5. API -> Elasticsearch (y=478 lane -> drops at x=622) -->
+  <path d="M 426 436 L 426 478 L 622 478 L 622 544" stroke="#38bdf8" stroke-width="2" fill="none" marker-end="url(#arrow-cyan)"/>
+  <rect x="568" y="508" width="108" height="20" rx="5" fill="#0f172a" stroke="#38bdf8" stroke-width="1"/>
+  <text x="622" y="518" class="pill-text" fill="#7dd3fc">BM25 + kNN RRF</text>
+
+  <!-- 6. Kafka -> Worker (y=492 lane across central corridor to x=670 -> up to 436) -->
+  <path d="M 468 544 L 468 492 L 670 492 L 670 438" stroke="#fbbf24" stroke-width="2" fill="none" marker-end="url(#arrow-amber)"/>
+  <rect x="494" y="482" width="112" height="20" rx="5" fill="#0f172a" stroke="#fbbf24" stroke-width="1"/>
+  <text x="550" y="492" class="pill-text" fill="#fde68a">Consume + DLQ</text>
+
+  <!-- 7. Worker -> Elasticsearch (x=754) -->
+  <path d="M 754 436 L 754 544" stroke="#fbbf24" stroke-width="2" fill="none" marker-end="url(#arrow-amber)"/>
+  <rect x="698" y="508" width="112" height="20" rx="5" fill="#0f172a" stroke="#fbbf24" stroke-width="1"/>
+  <text x="754" y="518" class="pill-text" fill="#fde68a">Bulk Index 768d</text>
+
+  <!-- 8. Worker -> Redis (x=1000) -->
+  <path d="M 1000 436 L 1000 544" stroke="#fbbf24" stroke-width="2" stroke-dasharray="5 3" fill="none" marker-end="url(#arrow-amber)"/>
+  <rect x="946" y="508" width="108" height="20" rx="5" fill="#0f172a" stroke="#fbbf24" stroke-width="1"/>
+  <text x="1000" y="518" class="pill-text" fill="#fde68a">Invalida Caché</text>
+
+  <!-- TIER 3: STORAGE & EVENTS (y: 546..642, h=96) -->
+  <rect x="40" y="546" width="235" height="96" rx="10" fill="#1e293b" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="56" y="570" class="box-title">PostgreSQL 17</text>
+  <text x="56" y="590" class="box-sub">Write Model (Drizzle ORM)</text>
+  <text x="56" y="610" class="mono">repositories · ingestion_jobs</text>
+  <text x="56" y="628" class="mono">Estado transaccional (:5432)</text>
+
+  <rect x="295" y="546" width="235" height="96" rx="10" fill="#1e293b" stroke="#fbbf24" stroke-width="1.5"/>
+  <text x="311" y="570" class="box-title">Apache Kafka 3.8 (KRaft)</text>
+  <text x="311" y="590" class="box-sub">Event Bus sin Zookeeper</text>
+  <text x="311" y="610" class="mono">docs.ingestion.requested (3p)</text>
+  <text x="311" y="628" class="mono">docs.ingestion.dlq (:9092)</text>
+
+  <rect x="565" y="546" width="245" height="96" rx="10" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+  <text x="581" y="570" class="box-title">Elasticsearch 8.15</text>
+  <text x="581" y="590" class="box-sub">Read Model Híbrido</text>
+  <text x="581" y="610" class="mono">Índice: code_and_docs_chunks</text>
+  <text x="581" y="628" class="mono">BM25 + HNSW 768d Cosine (:9200)</text>
+
+  <rect x="830" y="546" width="230" height="96" rx="10" fill="#1e293b" stroke="#f87171" stroke-width="1.5"/>
+  <text x="846" y="570" class="box-title">Redis 7</text>
+  <text x="846" y="590" class="box-sub">Caché de Búsquedas</text>
+  <text x="846" y="610" class="mono">TTL 600s · Set por repoId</text>
+  <text x="846" y="628" class="mono">Invalidación selectiva (:6379)</text>
+
+  <!-- Legend Footer -->
+  <line x1="250" y1="662" x2="280" y2="662" stroke="#38bdf8" stroke-width="2.5"/>
+  <text x="290" y="666" class="legend-text">Lectura / API síncrona</text>
+  <line x1="465" y1="662" x2="495" y2="662" stroke="#fbbf24" stroke-width="2.5"/>
+  <text x="505" y="666" class="legend-text">Ingesta asíncrona en background</text>
+  <line x1="735" y1="662" x2="765" y2="662" stroke="#a78bfa" stroke-width="2.5"/>
+  <text x="775" y="666" class="legend-text">Protocolo MCP (clientes IA)</text>
+</svg>

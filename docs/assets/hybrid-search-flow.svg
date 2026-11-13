@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 420" width="1100" height="420">
+  <title>Async Ingestion and Hybrid Search RRF Pipelines</title>
+  <defs>
+    <style>
+      .title { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 19px; font-weight: 700; fill: #f8fafc; }
+      .lane-title { font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 11.5px; font-weight: 700; letter-spacing: 0.05em; }
+      .step-title { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13.5px; font-weight: 700; fill: #f1f5f9; }
+      .step-line { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 11.5px; fill: #cbd5e1; }
+      .step-mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 10px; fill: #94a3b8; }
+    </style>
+    <marker id="arr-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#fbbf24"/>
+    </marker>
+    <marker id="arr-cyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8"/>
+    </marker>
+  </defs>
+
+  <rect width="1100" height="420" rx="16" fill="#0f172a"/>
+  <text x="550" y="34" text-anchor="middle" class="title">Flujos Operativos: Indexación AST e Inferencia Híbrida BM25 + kNN (RRF)</text>
+
+  <!-- LANE 1: ASYNC INGESTION PIPELINE -->
+  <rect x="28" y="54" width="1044" height="162" rx="12" fill="#451a03" fill-opacity="0.28" stroke="#f59e0b" stroke-width="1.2"/>
+  <text x="48" y="78" class="lane-title" fill="#fcd34d">1. PIPELINE DE INGESTA ASÍNCRONA (ESCRITURA / INDEXACIÓN EN BACKGROUND)</text>
+
+  <!-- Step 1 -->
+  <rect x="48" y="94" width="214" height="104" rx="10" fill="#1e293b" stroke="#fbbf24" stroke-width="1.2"/>
+  <text x="62" y="117" class="step-title">1. Evento &amp; Clonado</text>
+  <text x="62" y="138" class="step-line">POST /repositories -&gt; 202</text>
+  <text x="62" y="158" class="step-line">Clona Git (--depth 1) o local</text>
+  <text x="62" y="180" class="step-mono">PostgreSQL: Job PROCESSING</text>
+
+  <line x1="262" y1="146" x2="308" y2="146" stroke="#fbbf24" stroke-width="2.2" marker-end="url(#arr-amber)"/>
+
+  <!-- Step 2 -->
+  <rect x="312" y="94" width="214" height="104" rx="10" fill="#1e293b" stroke="#fbbf24" stroke-width="1.2"/>
+  <text x="326" y="117" class="step-title">2. AST Code Chunker</text>
+  <text x="326" y="138" class="step-line">Parser web-tree-sitter (WASM)</text>
+  <text x="326" y="158" class="step-line">TS/JS, Python, Go + MD / PDF</text>
+  <text x="326" y="180" class="step-mono">Preserva startLine &amp; endLine</text>
+
+  <line x1="526" y1="146" x2="572" y2="146" stroke="#fbbf24" stroke-width="2.2" marker-end="url(#arr-amber)"/>
+
+  <!-- Step 3 -->
+  <rect x="576" y="94" width="214" height="104" rx="10" fill="#1e293b" stroke="#fbbf24" stroke-width="1.2"/>
+  <text x="590" y="117" class="step-title">3. ONNX Local (768d)</text>
+  <text x="590" y="138" class="step-line">Xenova/bge-base-en-v1.5</text>
+  <text x="590" y="158" class="step-line">Vectores L2 en CPU local</text>
+  <text x="590" y="180" class="step-mono">Cero llamadas LLM externas</text>
+
+  <line x1="790" y1="146" x2="836" y2="146" stroke="#fbbf24" stroke-width="2.2" marker-end="url(#arr-amber)"/>
+
+  <!-- Step 4 -->
+  <rect x="840" y="94" width="214" height="104" rx="10" fill="#1e293b" stroke="#34d399" stroke-width="1.2"/>
+  <text x="854" y="117" class="step-title">4. Indexado Idempotente</text>
+  <text x="854" y="138" class="step-line">ID = sha256(repo+path+line)</text>
+  <text x="854" y="158" class="step-line">Bulk Index ES + Invalida Redis</text>
+  <text x="854" y="180" class="step-mono">PostgreSQL: Repo READY</text>
+
+  <!-- LANE 2: HYBRID SEARCH & MCP PIPELINE -->
+  <rect x="28" y="234" width="1044" height="166" rx="12" fill="#0c4a6e" fill-opacity="0.28" stroke="#38bdf8" stroke-width="1.2"/>
+  <text x="48" y="258" class="lane-title" fill="#7dd3fc">2. PIPELINE DE BÚSQUEDA HÍBRIDA &amp; MCP (LECTURA EN MILISEGUNDOS)</text>
+
+  <!-- Step 1 -->
+  <rect x="48" y="274" width="214" height="108" rx="10" fill="#1e293b" stroke="#38bdf8" stroke-width="1.2"/>
+  <text x="62" y="297" class="step-title">1. Consulta + Caché</text>
+  <text x="62" y="318" class="step-line">Web UI, REST o MCP (/mcp)</text>
+  <text x="62" y="338" class="step-line">Redis GET search:{sha256}</text>
+  <text x="62" y="362" class="step-mono">Cache Hit -&gt; Retorno directo</text>
+
+  <line x1="262" y1="328" x2="308" y2="328" stroke="#38bdf8" stroke-width="2.2" marker-end="url(#arr-cyan)"/>
+
+  <!-- Step 2 -->
+  <rect x="312" y="274" width="214" height="108" rx="10" fill="#1e293b" stroke="#38bdf8" stroke-width="1.2"/>
+  <text x="326" y="297" class="step-title">2. Búsqueda Dual</text>
+  <text x="326" y="318" class="step-line">BM25 (symbol^3, path^2)</text>
+  <text x="326" y="338" class="step-line">+ kNN HNSW Cosine (768d)</text>
+  <text x="326" y="362" class="step-mono">Top-50 candidatos por rama</text>
+
+  <line x1="526" y1="328" x2="572" y2="328" stroke="#38bdf8" stroke-width="2.2" marker-end="url(#arr-cyan)"/>
+
+  <!-- Step 3 -->
+  <rect x="576" y="274" width="214" height="108" rx="10" fill="#1e293b" stroke="#38bdf8" stroke-width="1.2"/>
+  <text x="590" y="297" class="step-title">3. Fusión RRF (k = 60)</text>
+  <text x="590" y="318" class="step-line">score(d) = Sum 1 / (60 + rank)</text>
+  <text x="590" y="338" class="step-line">Une coincidencia exacta + idea</text>
+  <text x="590" y="362" class="step-mono">ES Basic y Enterprise Native</text>
+
+  <line x1="790" y1="328" x2="836" y2="328" stroke="#38bdf8" stroke-width="2.2" marker-end="url(#arr-cyan)"/>
+
+  <!-- Step 4 -->
+  <rect x="840" y="274" width="214" height="108" rx="10" fill="#1e293b" stroke="#a78bfa" stroke-width="1.2"/>
+  <text x="854" y="297" class="step-title">4. Resultado + TTL</text>
+  <text x="854" y="318" class="step-line">Guarda en Redis (TTL 600s)</text>
+  <text x="854" y="338" class="step-line">Indexa clave en set repoId</text>
+  <text x="854" y="362" class="step-mono">Devuelve código + L_ini-L_fin</text>
+</svg>

@@ -1,0 +1,26 @@
+{
+  "name": "hybrid-rag-monorepo",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.18.0",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint && biome check .",
+    "format": "biome format --write .",
+    "test": "turbo run test",
+    "test:unit": "vitest run --project unit",
+    "test:integration": "vitest run --project integration"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.7",
+    "@types/node": "^22.15.0",
+    "turbo": "^2.11.11",
+    "typescript": "^5.9.3",
+    "vitest": "^5.1.0"
+  }
+}

@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hybrid-rag-config
+  namespace: hybrid-rag
+data:
+  NODE_ENV: "production"
+  PORT: "3000"
+  HOST: "0.0.0.0"
+  REDIS_URL: "redis://redis:6379"
+  KAFKA_BROKERS: "kafka:9092"
+  KAFKA_CLIENT_ID: "hybrid-rag-engine"
+  ELASTICSEARCH_NODE: "http://elasticsearch:9200"
+  ELASTICSEARCH_USE_NATIVE_RRF: "false"
+  EMBEDDINGS_MODEL: "Xenova/bge-base-en-v1.5"
+  EMBEDDINGS_MOCK: "false"
+  LOG_LEVEL: "info"

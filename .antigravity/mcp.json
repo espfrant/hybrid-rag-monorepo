@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "hybrid-rag-engine": {
+      "transport": "streamable-http",
+      "url": "http://localhost:3000/mcp"
+    }
+  }
+}

@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hybrid-rag-api
+  namespace: hybrid-rag
+  labels:
+    app: hybrid-rag-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: hybrid-rag-api
+  template:
+    metadata:
+      labels:
+        app: hybrid-rag-api
+    spec:
+      containers:
+        - name: api
+          image: ghcr.io/org/hybrid-rag-api:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+              name: http
+          envFrom:
+            - configMapRef:
+                name: hybrid-rag-config
+            - secretRef:
+                name: hybrid-rag-secrets
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hybrid-rag-api
+  namespace: hybrid-rag
+  labels:
+    app: hybrid-rag-api
+spec:
+  type: ClusterIP
+  selector:
+    app: hybrid-rag-api
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hybrid-rag-api-hpa
+  namespace: hybrid-rag
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: hybrid-rag-api
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70

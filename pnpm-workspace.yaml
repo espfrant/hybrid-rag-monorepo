@@ -1,0 +1,14 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+allowBuilds:
+  cpu-features: false
+  esbuild: true
+  onnxruntime-node: false
+  protobufjs: true
+  sharp: false
+  ssh2: false
+
+minimumReleaseAgeExclude:
+  - "@fastify/cors@11.4.3"
